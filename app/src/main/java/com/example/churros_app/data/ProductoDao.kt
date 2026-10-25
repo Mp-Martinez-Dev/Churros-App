@@ -5,6 +5,18 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProductoDao {
+    // --- MÉTODOS PARA COMBOS ---
+    @Query("SELECT * FROM combos ORDER BY id ASC")
+    fun obtenerTodosLosCombos(): Flow<List<ComboEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertarCombo(combo: ComboEntity)
+
+    @Delete
+    suspend fun eliminarCombo(combo: ComboEntity)
+
+    @Update
+    suspend fun actualizarCombo(combo: ComboEntity)
 
     // --- PRODUCTOS ---
     @Query("SELECT * FROM productos")
@@ -64,4 +76,6 @@ interface ProductoDao {
 
     @Delete
     suspend fun eliminarIngredienteReceta(item: RecetaItem)
-}
+
+  }
+

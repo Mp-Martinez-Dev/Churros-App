@@ -57,7 +57,7 @@ fun AlcanciaCerdito(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "🐷 Misión del Día",
+                text = " Misión del Día",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

@@ -11,9 +11,10 @@ import androidx.room.RoomDatabase
         Insumo::class,
         MisionDiaria::class,
         Movimiento::class,
-        RecetaItem::class
+        RecetaItem::class,
+        ComboEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
