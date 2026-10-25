@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase
         MisionDiaria::class,
         Movimiento::class,
         RecetaItem::class,
-        ComboEntity::class
+        Combo::class
     ],
     version = 2,
     exportSchema = false

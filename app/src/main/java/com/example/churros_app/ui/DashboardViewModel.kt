@@ -3,7 +3,7 @@ package com.example.churros_app.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModelProvider
-import com.example.churros_app.data.ComboEntity
+import com.example.churros_app.data.Combo
 import com.example.churros_app.data.Insumo
 import com.example.churros_app.data.MisionDiaria
 import com.example.churros_app.data.Movimiento
@@ -11,7 +11,6 @@ import com.example.churros_app.data.ProductoDao
 import com.example.churros_app.data.RecetaItem
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -67,7 +66,7 @@ class DashboardViewModel(private val productoDao: ProductoDao) : ViewModel() {
         )
 
     // 5. Flujo continuo de combos persistidos desde Room
-    val listaCombos: StateFlow<List<ComboEntity>> = productoDao.obtenerTodosLosCombos()
+    val listaCombos: StateFlow<List<Combo>> = productoDao.obtenerTodosLosCombos()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -98,7 +97,7 @@ class DashboardViewModel(private val productoDao: ProductoDao) : ViewModel() {
     fun agregarCombo(nombre: String, cantidadChurros: Int, precioCLP: Int) {
         viewModelScope.launch {
             productoDao.insertarCombo(
-                ComboEntity(
+                Combo(
                     nombre = nombre,
                     cantidadChurros = cantidadChurros,
                     precioCLP = precioCLP
@@ -107,12 +106,12 @@ class DashboardViewModel(private val productoDao: ProductoDao) : ViewModel() {
         }
     }
 
-    fun eliminarCombo(combo: ComboEntity) {
+    fun eliminarCombo(combo: Combo) {
         viewModelScope.launch {
             productoDao.eliminarCombo(combo)
         }
     }
-    fun actualizarCombo(combo: ComboEntity) {
+    fun actualizarCombo(combo: Combo) {
         viewModelScope.launch {
             productoDao.actualizarCombo(combo)
         }

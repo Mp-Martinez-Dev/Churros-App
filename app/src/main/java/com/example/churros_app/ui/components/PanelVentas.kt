@@ -12,86 +12,66 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun PanelVentas(
-    precioChurroCLP: Int = 200,
+    precioChurroCLP: Int = 250,
     alVenderChurros: (cantidad: Int) -> Unit,
     alAgregarTanda: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
+    TarjetaPasteleria(modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = " Registro Rápido de Ventas",
+                text = "⚡ Venta Rápida",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = ColorTextoVidrio
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Botones gigantes para registrar churros individuales o en pack
+            // Botones de venta rápida estilo cristal
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Button(
+                BotonPasteleria(
+                    texto = "+1 Churro",
+                    subtexto = "$${precioChurroCLP} CLP",
                     onClick = { alVenderChurros(1) },
                     modifier = Modifier
                         .weight(1f)
-                        .height(60.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = "+1 Churro", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        Text(text = "$${precioChurroCLP} CLP", fontSize = 12.sp)
-                    }
-                }
+                        .height(64.dp)
+                )
 
-                Button(
+                BotonPasteleria(
+                    texto = "+5 Churros",
+                    subtexto = "$${precioChurroCLP * 5} CLP",
                     onClick = { alVenderChurros(5) },
                     modifier = Modifier
                         .weight(1f)
-                        .height(60.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF2E7D32) // Verde para venta múltiple
-                    )
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = "+5 Churros", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        Text(text = "$${precioChurroCLP * 5} CLP", fontSize = 12.sp)
-                    }
-                }
+                        .height(64.dp),
+                    containerColor = Color(0x3378FFD6) // Fondo Neón sutil
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Divider()
+            HorizontalDivider(color = Color(0x26FFFFFF))
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Botón de Meta Dinámica / Aumento de Producción
-            OutlinedButton(
+            // Botón de Preparar Nueva Tanda
+            BotonSecundarioPasteleria(
+                texto = "+ Preparar Nueva Tanda (+40 churros)",
                 onClick = alAgregarTanda,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text(
-                    text = "+ Preparar Nueva Tanda (+40 churros)",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp
-                )
-            }
+                    .height(52.dp),
+                colorBorde = Color(0x8078FFD6),
+                colorTexto = ColorNeonVerde
+            )
         }
     }
 }

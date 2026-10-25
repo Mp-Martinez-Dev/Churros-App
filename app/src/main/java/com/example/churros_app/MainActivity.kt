@@ -37,7 +37,8 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            ChurrosAppTheme {
+            // Se fuerza darkTheme = false para mantener la estética clara de pastelería
+            ChurrosAppTheme(darkTheme = false) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

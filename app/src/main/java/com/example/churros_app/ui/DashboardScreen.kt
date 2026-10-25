@@ -1,10 +1,13 @@
 package com.example.churros_app.ui
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,60 +15,67 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.churros_app.R
-import com.example.churros_app.data.ComboEntity
+import com.example.churros_app.data.Combo
 import com.example.churros_app.data.Insumo
 import com.example.churros_app.data.MisionDiaria
 import com.example.churros_app.data.Movimiento
 import com.example.churros_app.data.RecetaItem
+import androidx.compose.ui.window.Dialog
 
 // ==========================================
-// PALETA DE COLORES PASTELERÍA
+// PALETA DE COLORES GLASSCORP NEÓN
 // ==========================================
-val ColorChocolate = Color(0xFF3E2723)
-val ColorSecundario = Color(0xFF6D4C41)
-val ColorCanela = Color(0xFF8D6E63)
-val ColorCaramelo = Color(0xFFD84315)
-val ColorCremaFondo = Color(0xFFFAF5EF)
-val ColorCremaCard = Color(0xFFFFFDF9)
+val FondoGlassOscuro = Color(0xFF10141D)
+val FondoTarjetaGlass = Color(0x2BFFFFFF) // Superficie translúcida
+val FondoBotonGlass = Color(0x1FFFFFFF)
+
+val TextoBlancoGlass = Color(0xFFF0F4F8)
+val TextoSecundarioGlass = Color(0xFF9AA5B1)
+val TextoVerdeNeon = Color(0xFF78FFD6)
+
+// Degradado iridiscente para los bordes de cristal
+val BordeGlassGradient = Brush.linearGradient(
+    colors = listOf(
+        Color(0x80A8FF78), // Verde Neón suave
+        Color(0x8078FFD6), // Turquesa
+        Color(0x80FF78C4), // Rosa iridiscente
+        Color(0x20FFFFFF)  // Brillo blanco
+    )
+)
 
 // ==========================================
-// COMPONENTES REUTILIZABLES
+// COMPONENTES REUTILIZABLES GLASSCORP
 // ==========================================
 
 @Composable
 fun FondoPasteleria(
     modifier: Modifier = Modifier,
-    alphaLogo: Float = 0.10f,
+    alphaLogo: Float = 0.07f,
     content: @Composable BoxScope.() -> Unit
 ) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(ColorCremaFondo)
+            .background(FondoGlassOscuro)
     ) {
-        // Marca de agua transparente centrada
+        // Marca de agua sutil centrada sobre fondo oscuro
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = null,
@@ -83,16 +93,22 @@ fun TarjetaPasteleria(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = ColorCremaCard),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    val forma = RoundedCornerShape(24.dp)
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(forma)
+            .background(FondoTarjetaGlass)
+            .border(
+                width = 1.dp,
+                brush = BordeGlassGradient,
+                shape = forma
+            )
+            .padding(18.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
+            modifier = Modifier.fillMaxWidth(),
             content = content
         )
     }
@@ -105,22 +121,35 @@ fun BotonPasteleria(
     modifier: Modifier = Modifier,
     subtexto: String? = null,
     enabled: Boolean = true,
-    containerColor: Color = ColorCanela
+    containerColor: Color = FondoBotonGlass
 ) {
     Button(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Color(0x40FFFFFF)),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
-            disabledContainerColor = Color(0xFFE0E0E0)
+            disabledContainerColor = Color(0x1AFFFFFF)
         )
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = texto, fontWeight = FontWeight.Bold)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(vertical = 4.dp)
+        ) {
+            Text(
+                text = texto,
+                fontWeight = FontWeight.Bold,
+                color = TextoBlancoGlass
+            )
             if (!subtexto.isNullOrBlank()) {
-                Text(text = subtexto, fontSize = 11.sp, color = Color(0xFFFFF8E1))
+                Text(
+                    text = subtexto,
+                    fontSize = 11.sp,
+                    color = TextoVerdeNeon,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     }
@@ -133,27 +162,69 @@ fun BotonSecundarioPasteleria(
     modifier: Modifier = Modifier,
     subtexto: String? = null,
     enabled: Boolean = true,
-    colorBorde: Color = ColorCanela,
-    colorTexto: Color = ColorChocolate
+    colorBorde: Color = Color(0x8078FFD6),
+    colorTexto: Color = TextoVerdeNeon
 ) {
     OutlinedButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, colorBorde)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = texto, fontWeight = FontWeight.Bold, color = colorTexto)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(vertical = 4.dp)
+        ) {
+            Text(
+                text = texto,
+                fontWeight = FontWeight.Bold,
+                color = colorTexto
+            )
             if (!subtexto.isNullOrBlank()) {
-                Text(text = subtexto, fontSize = 11.sp, color = ColorCaramelo)
+                Text(
+                    text = subtexto,
+                    fontSize = 11.sp,
+                    color = TextoVerdeNeon
+                )
             }
+        }
+    }
+}
+@Composable
+fun DialogoGlassContainer(
+    onDismissRequest: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val forma = RoundedCornerShape(28.dp)
+
+    Dialog(onDismissRequest = onDismissRequest) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(forma)
+                .background(Color(0xFF121620))
+                .border(
+                    width = 1.5.dp,
+                    brush = BordeGlassGradient,
+                    shape = forma
+                ),
+            color = Color(0xFF121620),
+            shape = forma,
+            tonalElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                content = content
+            )
         }
     }
 }
 
 // ==========================================
-// PANTALLA PRINCIPAL DASHBOARD
+// PANTALLA PRINCIPAL DASHBOARD GLASSCORP
 // ==========================================
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -163,6 +234,7 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
     val mision by viewModel.misionActual.collectAsState()
 
     Scaffold(
+        containerColor = FondoGlassOscuro,
         topBar = {
             TopAppBar(
                 title = {
@@ -182,12 +254,15 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(7.dp)
                     ) {
                         Surface(
-                            color = ColorCanela.copy(alpha = 0.3f),
+                            color = Color(0x33FFFFFF),
                             shape = CircleShape,
-                            modifier = Modifier.size(38.dp)
+                            modifier = Modifier
+                                .size(45.dp)
+                                .border(1.dp, TextoVerdeNeon, CircleShape)
+
                         ) {
                             Box(
                                 contentAlignment = Alignment.Center,
@@ -202,43 +277,87 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
                         }
 
                         Text(
+                            // 1. TEXTO: El contenido dinámico o estático que se va a desplegar en pantalla
                             text = textoTitulo,
-                            color = ColorCremaCard,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontFamily = FontFamily.Serif,
-                            letterSpacing = 0.5.sp
+
+                            // 2. COLOR: Tinta aplicada al texto (soportado por la paleta translúcida/neón de Glasscorp)
+                            color = TextoBlancoGlass,
+
+                            // 3. TAMAÑO DE FUENTE: Define la escala visual del texto en dp/sp
+                            fontSize = 25.sp,
+
+                            // 4. GROSOR DE FUENTE: Peso tipográfico (Thin, Light, Normal, Bold, ExtraBold, Black)
+                            fontWeight = FontWeight.Black,
+
+                            // 5. FAMILIA TIPOGRÁFICA: Estilo de fuente (Serif, SansSerif, Monospace, Cursive)
+                            fontFamily = FontFamily.Monospace,
+
+                            // 6. ESPACIADO ENTRE LETRAS: Tracking/interlineado horizontal entre caracteres
+                            letterSpacing = 0.5.sp,
+
+                            // 7. ALINEACIÓN INTERNA: Centra el flujo de texto dentro de los límites del componente
+                            textAlign = TextAlign.Center,
+
+                            // 8. MODIFICADOR: Hace que el componente abarque todo el ancho horizontal disponible para permitir el centrado perfecto
+                            modifier = Modifier.fillMaxWidth()
+
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = ColorChocolate)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0x1F12151A) // Translúcido
+                ),
+                modifier = Modifier.border(
+                    width = 0.5.dp,
+                    color = Color(0x26FFFFFF)
+                )
             )
         },
         bottomBar = {
-            NavigationBar(containerColor = ColorCremaCard) {
+            NavigationBar(
+                containerColor = Color(0x4D10141D), // Fondo cristal oscuro
+                tonalElevation = 0.dp,
+                modifier = Modifier.border(
+                    width = 1.dp,
+                    brush = BordeGlassGradient,
+                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                )
+            ) {
+                val itemColors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = TextoVerdeNeon,
+                    selectedTextColor = TextoVerdeNeon,
+                    indicatorColor = Color(0x3378FFD6),
+                    unselectedIconColor = TextoSecundarioGlass,
+                    unselectedTextColor = TextoSecundarioGlass
+                )
+
                 NavigationBarItem(
                     selected = pestañaSeleccionada == 0,
                     onClick = { pestañaSeleccionada = 0 },
                     icon = { Icon(Icons.Default.Home, contentDescription = "Ventas") },
-                    label = { Text("Ventas") }
+                    label = { Text("Ventas") },
+                    colors = itemColors
                 )
                 NavigationBarItem(
                     selected = pestañaSeleccionada == 1,
                     onClick = { pestañaSeleccionada = 1 },
                     icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Bodega") },
-                    label = { Text("Bodega") }
+                    label = { Text("Bodega") },
+                    colors = itemColors
                 )
                 NavigationBarItem(
                     selected = pestañaSeleccionada == 2,
                     onClick = { pestañaSeleccionada = 2 },
                     icon = { Icon(Icons.Default.List, contentDescription = "Historial") },
-                    label = { Text("Historial") }
+                    label = { Text("Historial") },
+                    colors = itemColors
                 )
                 NavigationBarItem(
                     selected = pestañaSeleccionada == 3,
                     onClick = { pestañaSeleccionada = 3 },
                     icon = { Icon(Icons.Default.Build, contentDescription = "Receta") },
-                    label = { Text("Receta") }
+                    label = { Text("Receta") },
+                    colors = itemColors
                 )
             }
         }
@@ -257,7 +376,6 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
 // ==========================================
 // ANIMACIÓN Y VISTA ALCANCÍA / COMBOS
 // ==========================================
-
 @Composable
 fun AnimacionCaidaMoneda(
     ejecutar: Boolean,
@@ -285,19 +403,26 @@ fun AnimacionCaidaMoneda(
             .offset(y = animacionOffsetY.value.dp)
             .graphicsLayer(alpha = animacionAlpha.value)
             .size(32.dp)
-            .background(Color(0xFFFFD700), shape = CircleShape),
+            .background(Color(0xFFFFD700), shape = CircleShape)
+            .border(1.dp, Color(0xFFFFF59D), CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = "$", color = ColorChocolate, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text(
+            text = "$",
+            color = Color(0xFF12151A),
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
     }
 }
+
 @Composable
 fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
     var animarMoneda by remember { mutableStateOf(false) }
 
     // Estados para los diálogos CRUD
     var mostrarGestorCombos by remember { mutableStateOf(false) }
-    var comboAEditar by remember { mutableStateOf<ComboEntity?>(null) }
+    var comboAEditar by remember { mutableStateOf<Combo?>(null) }
     var mostrarFormularioCombo by remember { mutableStateOf(false) }
 
     // Lectura reactiva desde Room
@@ -330,15 +455,17 @@ fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
                     label = "ColorPildoraProgresiva"
                 )
 
-                // 1. TARJETA PRINCIPAL: MISIÓN Y ALCANCÍA
+                // 1. TARJETA PRINCIPAL: MISIÓN Y ALCANCÍA GLASSCORP
                 TarjetaPasteleria {
                     Text(
-                        text = " Misión del Día ",
+                        text = " Misión del Día",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
-                        color = ColorChocolate,
+                        color = TextoBlancoGlass,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Box(
                         modifier = Modifier
@@ -362,10 +489,14 @@ fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
                         )
                     }
 
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     Surface(
-                        color = colorPildoraAnimado,
+                        color = colorPildoraAnimado.copy(alpha = 0.85f),
                         shape = RoundedCornerShape(25.dp),
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .border(1.dp, Color(0x66FFFFFF), RoundedCornerShape(25.dp))
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
@@ -388,32 +519,32 @@ fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Progreso de Venta", fontSize = 12.sp, color = ColorSecundario)
-                            Text("${m.unidadesVendidas} de ${m.metaUnidades} churros", fontWeight = FontWeight.Bold, color = ColorChocolate)
+                            Text("Progreso de Venta", fontSize = 12.sp, color = TextoSecundarioGlass)
+                            Text("${m.unidadesVendidas} de ${m.metaUnidades} churros", fontWeight = FontWeight.Bold, color = TextoBlancoGlass)
                             Text(
                                 "Quedan: $churrosDisponibles churros",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = if (churrosDisponibles == 0) Color(0xFFC62828) else Color(0xFF388E3C)
+                                color = if (churrosDisponibles == 0) Color(0xFFFF5252) else TextoVerdeNeon
                             )
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("Meta Objetiva", fontSize = 12.sp, color = ColorSecundario)
-                            Text("$metaCLP CLP", fontWeight = FontWeight.Bold, color = ColorCaramelo)
+                            Text("Meta Objetiva", fontSize = 12.sp, color = TextoSecundarioGlass)
+                            Text("$metaCLP CLP", fontWeight = FontWeight.Bold, color = TextoVerdeNeon)
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 2. REGISTRO RÁPIDO Y COMBOS CON BOTONES SUPERIORES JUNTO AL TÍTULO
+                // 2. REGISTRO RÁPIDO Y COMBOS GLASSCORP
                 TarjetaPasteleria {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -424,16 +555,15 @@ fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
                             text = " Venta Rápida & Combos",
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
-                            color = ColorChocolate
+                            color = TextoBlancoGlass
                         )
 
-                        // ROW DE ACCIONES: BOTÓN DE AJUSTES Y BOTÓN AGREGAR (+) JUNTO AL TÍTULO
                         Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
                             IconButton(onClick = { mostrarGestorCombos = true }) {
                                 Icon(
                                     imageVector = Icons.Default.Settings,
                                     contentDescription = "Administrar Combos",
-                                    tint = ColorCanela
+                                    tint = TextoVerdeNeon
                                 )
                             }
                             IconButton(onClick = {
@@ -443,13 +573,13 @@ fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
                                 Icon(
                                     imageVector = Icons.Default.AddCircle,
                                     contentDescription = "Nuevo Combo",
-                                    tint = ColorCanela
+                                    tint = TextoVerdeNeon
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // GRILLA DE BOTONES UNIFICADOS (+1, +5 Y COMBOS PERSONALIZADOS)
                     val listaOpcionesBase = listOf(
@@ -478,7 +608,6 @@ fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
                                             animarMoneda = true
                                         },
                                         enabled = churrosDisponibles >= cantidad,
-                                        containerColor = ColorCanela,
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -489,9 +618,11 @@ fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
                         }
                     }
 
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFFEFEBE9))
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 14.dp),
+                        color = Color(0x26FFFFFF)
+                    )
 
-                    // BOTÓN INFERIOR RESTAURADO A PREPARAR NUEVA TANDA
                     BotonSecundarioPasteleria(
                         texto = "+ Preparar Nueva Tanda (+40 churros)",
                         onClick = { viewModel.prepararNuevaTanda() },
@@ -503,71 +634,69 @@ fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
     }
 
     // ==========================================
-    // DIÁLOGO CRUD: ADMINISTRAR COMBOS
+    // DIÁLOGO CRUD: ADMINISTRAR COMBOS GLASSCORP
     // ==========================================
     if (mostrarGestorCombos) {
-        AlertDialog(
-            onDismissRequest = { mostrarGestorCombos = false },
-            title = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Combos Registrados", fontWeight = FontWeight.Bold, color = ColorChocolate)
-                    IconButton(onClick = {
-                        comboAEditar = null
-                        mostrarFormularioCombo = true
-                    }) {
-                        Icon(Icons.Default.Add, contentDescription = "Nuevo Combo", tint = ColorCanela)
-                    }
+        DialogoGlassContainer(onDismissRequest = { mostrarGestorCombos = false }) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Combos Registrados", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = TextoBlancoGlass)
+                IconButton(onClick = {
+                    comboAEditar = null
+                    mostrarFormularioCombo = true
+                }) {
+                    Icon(Icons.Default.Add, contentDescription = "Nuevo Combo", tint = TextoVerdeNeon)
                 }
-            },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    if (listaCombos.isEmpty()) {
-                        Text(
-                            "No hay combos personalizados creados. Toca '+' para agregar uno.",
-                            color = Color.Gray,
-                            fontSize = 13.sp
-                        )
-                    } else {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.heightIn(max = 280.dp)
-                        ) {
-                            items(listaCombos, key = { it.id }) { combo ->
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = ColorCremaFondo),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(10.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(combo.nombre, fontWeight = FontWeight.Bold, color = ColorChocolate)
-                                            Text("${combo.cantidadChurros} churros • $${combo.precioCLP} CLP", fontSize = 12.sp, color = ColorSecundario)
-                                        }
+            }
 
-                                        Row {
-                                            IconButton(onClick = {
-                                                comboAEditar = combo
-                                                mostrarFormularioCombo = true
-                                            }) {
-                                                Icon(Icons.Default.Edit, contentDescription = "Editar", tint = ColorCanela)
-                                            }
-                                            IconButton(onClick = { viewModel.eliminarCombo(combo) }) {
-                                                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color(0xFFD32F2F))
-                                            }
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (listaCombos.isEmpty()) {
+                    Text(
+                        "No hay combos personalizados creados. Toca '+' para agregar uno.",
+                        color = TextoSecundarioGlass,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.heightIn(max = 280.dp)
+                    ) {
+                        items(listaCombos, key = { it.id }) { combo ->
+                            Surface(
+                                color = Color(0x1AFFFFFF),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, Color(0x33FFFFFF))
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(combo.nombre, fontWeight = FontWeight.Bold, color = TextoBlancoGlass)
+                                        Text("${combo.cantidadChurros} churros • $${combo.precioCLP} CLP", fontSize = 12.sp, color = TextoVerdeNeon)
+                                    }
+
+                                    Row {
+                                        IconButton(onClick = {
+                                            comboAEditar = combo
+                                            mostrarFormularioCombo = true
+                                        }) {
+                                            Icon(Icons.Default.Edit, contentDescription = "Editar", tint = TextoVerdeNeon)
+                                        }
+                                        IconButton(onClick = { viewModel.eliminarCombo(combo) }) {
+                                            Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color(0xFFFF5252))
                                         }
                                     }
                                 }
@@ -575,30 +704,36 @@ fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
                         }
                     }
                 }
-            },
-            confirmButton = {
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
                 Button(
                     onClick = { mostrarGestorCombos = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = ColorCanela)
+                    colors = ButtonDefaults.buttonColors(containerColor = FondoBotonGlass),
+                    border = BorderStroke(1.dp, Color(0x40FFFFFF)),
+                    shape = RoundedCornerShape(20.dp)
                 ) {
-                    Text("Cerrar")
+                    Text("Cerrar", color = TextoBlancoGlass)
                 }
             }
-        )
+        }
     }
 
     // ==========================================
-    // DIÁLOGO FORMULARIO: CREAR / EDITAR COMBO CON VALIDACIONES
+    // DIÁLOGO FORMULARIO: CREAR / EDITAR COMBO
     // ==========================================
     if (mostrarFormularioCombo) {
         var nombreCombo by remember { mutableStateOf(comboAEditar?.nombre ?: "") }
         var cantidadChurrosText by remember { mutableStateOf(comboAEditar?.cantidadChurros?.toString() ?: "") }
         var precioComboText by remember { mutableStateOf(comboAEditar?.precioCLP?.toString() ?: "") }
 
-        // Control para activar errores solo al presionar "Guardar"
         var intentadoGuardar by remember { mutableStateOf(false) }
 
-        // Criterios de validación
         val esNombreInvalido = intentadoGuardar && nombreCombo.isBlank()
         val cantInt = cantidadChurrosText.toIntOrNull() ?: 0
         val esCantidadInvalida = intentadoGuardar && cantInt <= 0
@@ -607,95 +742,129 @@ fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
 
         val precioBaseSugerido = cantInt * 200
 
-        AlertDialog(
+        val coloresInputGlass = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = TextoBlancoGlass,
+            unfocusedTextColor = TextoBlancoGlass,
+            focusedContainerColor = Color(0x1AFFFFFF),
+            unfocusedContainerColor = Color(0x0DFFFFFF),
+            focusedBorderColor = TextoVerdeNeon,
+            unfocusedBorderColor = Color(0x40FFFFFF),
+            focusedLabelColor = TextoVerdeNeon,
+            unfocusedLabelColor = TextoSecundarioGlass,
+            errorBorderColor = Color(0xFFFF5252),
+            errorLabelColor = Color(0xFFFF5252)
+        )
+
+        DialogoGlassContainer(
             onDismissRequest = {
                 mostrarFormularioCombo = false
                 comboAEditar = null
-            },
-            title = {
-                Text(
-                    text = if (comboAEditar != null) "Editar Combo" else "Nuevo Combo",
-                    fontWeight = FontWeight.Bold,
-                    color = ColorChocolate
-                )
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    // 1. CAMPO NOMBRE
-                    Column {
-                        OutlinedTextField(
-                            value = nombreCombo,
-                            onValueChange = { nombreCombo = it },
-                            label = { Text("Nombre del Combo (ej. Pack Familiar)") },
-                            singleLine = true,
-                            isError = esNombreInvalido,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        if (esNombreInvalido) {
-                            Text(
-                                text = "⚠️ El nombre no puede estar vacío",
-                                color = MaterialTheme.colorScheme.error,
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                            )
-                        }
-                    }
+            }
+        ) {
+            Text(
+                text = if (comboAEditar != null) "Editar Combo" else "Nuevo Combo",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = TextoBlancoGlass,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
 
-                    // 2. CAMPO CANTIDAD DE CHURROS
-                    Column {
-                        OutlinedTextField(
-                            value = cantidadChurrosText,
-                            onValueChange = { cantidadChurrosText = it.filter { char -> char.isDigit() } },
-                            label = { Text("Cantidad de Churros") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            isError = esCantidadInvalida,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        if (esCantidadInvalida) {
-                            Text(
-                                text = " Ingrese una cantidad mayor a 0",
-                                color = MaterialTheme.colorScheme.error,
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                            )
-                        }
-                    }
-
-                    // VALOR BASE SUGERIDO
-                    if (cantInt > 0) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                // 1. CAMPO NOMBRE
+                Column {
+                    OutlinedTextField(
+                        value = nombreCombo,
+                        onValueChange = { nombreCombo = it },
+                        label = { Text("Nombre del Combo (ej. Pack Familiar)") },
+                        singleLine = true,
+                        isError = esNombreInvalido,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = coloresInputGlass
+                    )
+                    if (esNombreInvalido) {
                         Text(
-                            text = " Valor base estándar (x$cantInt): $$precioBaseSugerido CLP",
-                            fontSize = 12.sp,
-                            color = ColorSecundario,
-                            fontWeight = FontWeight.SemiBold
+                            text = "⚠️ El nombre no puede estar vacío",
+                            color = Color(0xFFFF5252),
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
                         )
-                    }
-
-                    // 3. CAMPO PRECIO FINAL
-                    Column {
-                        OutlinedTextField(
-                            value = precioComboText,
-                            onValueChange = { precioComboText = it.filter { char -> char.isDigit() } },
-                            label = { Text("Precio Final del Combo (CLP)") },
-                            placeholder = { if (precioBaseSugerido > 0) Text("Ej. $precioBaseSugerido") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            isError = esPrecioInvalido,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        if (esPrecioInvalido) {
-                            Text(
-                                text = " Ingrese un precio válido en CLP",
-                                color = MaterialTheme.colorScheme.error,
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                            )
-                        }
                     }
                 }
-            },
-            confirmButton = {
+
+                // 2. CAMPO CANTIDAD DE CHURROS
+                Column {
+                    OutlinedTextField(
+                        value = cantidadChurrosText,
+                        onValueChange = { cantidadChurrosText = it.filter { char -> char.isDigit() } },
+                        label = { Text("Cantidad de Churros") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        isError = esCantidadInvalida,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = coloresInputGlass
+                    )
+                    if (esCantidadInvalida) {
+                        Text(
+                            text = "⚠️ Ingrese una cantidad mayor a 0",
+                            color = Color(0xFFFF5252),
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                        )
+                    }
+                }
+
+                if (cantInt > 0) {
+                    Text(
+                        text = "Valor base estándar (x$cantInt): $$precioBaseSugerido CLP",
+                        fontSize = 12.sp,
+                        color = TextoVerdeNeon,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                // 3. CAMPO PRECIO FINAL
+                Column {
+                    OutlinedTextField(
+                        value = precioComboText,
+                        onValueChange = { precioComboText = it.filter { char -> char.isDigit() } },
+                        label = { Text("Precio Final del Combo (CLP)") },
+                        placeholder = { if (precioBaseSugerido > 0) Text("Ej. $precioBaseSugerido", color = TextoSecundarioGlass) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        isError = esPrecioInvalido,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = coloresInputGlass
+                    )
+                    if (esPrecioInvalido) {
+                        Text(
+                            text = "⚠️ Ingrese un precio válido en CLP",
+                            color = Color(0xFFFF5252),
+                            fontSize = 11.sp,
+                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // BOTONES DE ACCIÓN
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(
+                    onClick = {
+                        mostrarFormularioCombo = false
+                        comboAEditar = null
+                    }
+                ) {
+                    Text("Cancelar", color = TextoSecundarioGlass)
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Button(
                     onClick = {
                         intentadoGuardar = true
@@ -703,7 +872,6 @@ fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
 
                         if (nombreCombo.isNotBlank() && cantInt > 0 && prec > 0) {
                             if (comboAEditar != null) {
-                                // EDICIÓN
                                 viewModel.actualizarCombo(
                                     comboAEditar!!.copy(
                                         nombre = nombreCombo.trim(),
@@ -712,7 +880,6 @@ fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
                                     )
                                 )
                             } else {
-                                // CREACIÓN
                                 viewModel.agregarCombo(
                                     nombre = nombreCombo.trim(),
                                     cantidadChurros = cantInt,
@@ -723,22 +890,14 @@ fun VistaAlcancíaDiaria(mision: MisionDiaria?, viewModel: DashboardViewModel) {
                             comboAEditar = null
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = ColorCanela)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0x3378FFD6)),
+                    border = BorderStroke(1.dp, TextoVerdeNeon),
+                    shape = RoundedCornerShape(20.dp)
                 ) {
-                    Text("Guardar")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        mostrarFormularioCombo = false
-                        comboAEditar = null
-                    }
-                ) {
-                    Text("Cancelar", color = ColorSecundario)
+                    Text("Guardar", color = TextoBlancoGlass, fontWeight = FontWeight.Bold)
                 }
             }
-        )
+        }
     }
 }
 // ==========================================
@@ -755,8 +914,9 @@ fun VistaBodegaInsumos(viewModel: DashboardViewModel) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { mostrarDialogoCrear = true },
-                containerColor = ColorCanela,
-                contentColor = Color.White
+                containerColor = Color(0x3378FFD6),
+                contentColor = TextoVerdeNeon,
+                modifier = Modifier.border(1.dp, TextoVerdeNeon, androidx.compose.foundation.shape.CircleShape)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Agregar Insumo")
             }
@@ -773,7 +933,7 @@ fun VistaBodegaInsumos(viewModel: DashboardViewModel) {
                 text = "Inventario de Bodega",
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                color = ColorChocolate
+                color = TextoBlancoGlass
             )
 
             if (listaInsumos.isEmpty()) {
@@ -785,7 +945,7 @@ fun VistaBodegaInsumos(viewModel: DashboardViewModel) {
                 ) {
                     Text(
                         text = "No hay insumos registrados. Haz clic en '+' para agregar uno.",
-                        color = Color.Gray
+                        color = TextoSecundarioGlass
                     )
                 }
             } else {
@@ -805,11 +965,11 @@ fun VistaBodegaInsumos(viewModel: DashboardViewModel) {
                                         text = insumo.nombre,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp,
-                                        color = ColorChocolate
+                                        color = TextoBlancoGlass
                                     )
                                     Text(
                                         text = "${insumo.cantidadDisponible} ${insumo.unidadMedida}",
-                                        color = Color(0xFF2E7D32),
+                                        color = TextoVerdeNeon,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 }
@@ -818,14 +978,14 @@ fun VistaBodegaInsumos(viewModel: DashboardViewModel) {
                                         Icon(
                                             imageVector = Icons.Default.Edit,
                                             contentDescription = "Editar",
-                                            tint = ColorCanela
+                                            tint = TextoVerdeNeon
                                         )
                                     }
                                     IconButton(onClick = { viewModel.eliminarInsumo(insumo) }) {
                                         Icon(
                                             imageVector = Icons.Default.Delete,
                                             contentDescription = "Eliminar",
-                                            tint = Color(0xFFD32F2F)
+                                            tint = Color(0xFFFF5252)
                                         )
                                     }
                                 }
@@ -868,7 +1028,6 @@ fun VistaBodegaInsumos(viewModel: DashboardViewModel) {
         )
     }
 }
-
 // ==========================================
 // DIÁLOGO REUTILIZABLE: INSUMO CON VALIDACIONES Y ERRORES VISUALES
 // ==========================================
@@ -894,81 +1053,113 @@ fun DialogoInsumo(
     val esCantidadInvalida = intentadoGuardar && (cantidadDouble == null || cantidadDouble <= 0.0)
     val esUnidadInvalida = intentadoGuardar && unidad.isBlank()
 
-    AlertDialog(
-        onDismissRequest = alCancelar,
-        title = {
-            Text(text = titulo, fontWeight = FontWeight.Bold, color = ColorChocolate)
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                // 1. CAMPO NOMBRE
-                Column {
-                    OutlinedTextField(
-                        value = nombre,
-                        onValueChange = { nombre = it },
-                        label = { Text("Nombre del Insumo (ej. Harina, Aceite)") },
-                        singleLine = true,
-                        isError = esNombreInvalido,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (esNombreInvalido) {
-                        Text(
-                            text = "⚠️ El nombre no puede estar vacío",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                        )
-                    }
-                }
+    val coloresInputGlass = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = TextoBlancoGlass,
+        unfocusedTextColor = TextoBlancoGlass,
+        focusedContainerColor = Color(0x1AFFFFFF),
+        unfocusedContainerColor = Color(0x0DFFFFFF),
+        focusedBorderColor = TextoVerdeNeon,
+        unfocusedBorderColor = Color(0x40FFFFFF),
+        focusedLabelColor = TextoVerdeNeon,
+        unfocusedLabelColor = TextoSecundarioGlass,
+        errorBorderColor = Color(0xFFFF5252),
+        errorLabelColor = Color(0xFFFF5252)
+    )
 
-                // 2. CAMPO CANTIDAD DISPONIBLE
-                Column {
-                    OutlinedTextField(
-                        value = cantidadText,
-                        onValueChange = { texto ->
-                            // Permitir números y un solo punto o coma decimal
-                            if (texto.isEmpty() || texto.matches(Regex("^\\d*([.,]?\\d*)?$"))) {
-                                cantidadText = texto.replace(',', '.')
-                            }
-                        },
-                        label = { Text("Cantidad Disponible") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        isError = esCantidadInvalida,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (esCantidadInvalida) {
-                        Text(
-                            text = "⚠️ Ingrese una cantidad mayor a 0",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                        )
-                    }
-                }
+    DialogoGlassContainer(onDismissRequest = alCancelar) {
+        // TÍTULO DEL DIÁLOGO
+        Text(
+            text = titulo,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            color = TextoBlancoGlass,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
 
-                // 3. CAMPO UNIDAD DE MEDIDA
-                Column {
-                    OutlinedTextField(
-                        value = unidad,
-                        onValueChange = { unidad = it },
-                        label = { Text("Unidad de Medida (ej. kg, g, l, ml)") },
-                        singleLine = true,
-                        isError = esUnidadInvalida,
-                        modifier = Modifier.fillMaxWidth()
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            // 1. CAMPO NOMBRE
+            Column {
+                OutlinedTextField(
+                    value = nombre,
+                    onValueChange = { nombre = it },
+                    label = { Text("Nombre del Insumo (ej. Harina, Aceite)") },
+                    singleLine = true,
+                    isError = esNombreInvalido,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = coloresInputGlass
+                )
+                if (esNombreInvalido) {
+                    Text(
+                        text = "⚠️ El nombre no puede estar vacío",
+                        color = Color(0xFFFF5252),
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
                     )
-                    if (esUnidadInvalida) {
-                        Text(
-                            text = "⚠️ Especifique la unidad de medida",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                        )
-                    }
                 }
             }
-        },
-        confirmButton = {
+
+            // 2. CAMPO CANTIDAD DISPONIBLE
+            Column {
+                OutlinedTextField(
+                    value = cantidadText,
+                    onValueChange = { texto ->
+                        if (texto.isEmpty() || texto.matches(Regex("^\\d*([.,]?\\d*)?$"))) {
+                            cantidadText = texto.replace(',', '.')
+                        }
+                    },
+                    label = { Text("Cantidad Disponible") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    isError = esCantidadInvalida,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = coloresInputGlass
+                )
+                if (esCantidadInvalida) {
+                    Text(
+                        text = "⚠️ Ingrese una cantidad mayor a 0",
+                        color = Color(0xFFFF5252),
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
+            }
+
+            // 3. CAMPO UNIDAD DE MEDIDA
+            Column {
+                OutlinedTextField(
+                    value = unidad,
+                    onValueChange = { unidad = it },
+                    label = { Text("Unidad de Medida (ej. kg, g, l, ml)") },
+                    singleLine = true,
+                    isError = esUnidadInvalida,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = coloresInputGlass
+                )
+                if (esUnidadInvalida) {
+                    Text(
+                        text = "⚠️ Especifique la unidad de medida",
+                        color = Color(0xFFFF5252),
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // BOTONES DE ACCIÓN (CANCELAR Y GUARDAR)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = alCancelar) {
+                Text("Cancelar", color = TextoSecundarioGlass)
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
             Button(
                 onClick = {
                     intentadoGuardar = true
@@ -976,19 +1167,15 @@ fun DialogoInsumo(
                         alGuardar(nombre.trim(), cantidadDouble, unidad.trim())
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = ColorCanela)
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0x3378FFD6)),
+                border = BorderStroke(1.dp, TextoVerdeNeon),
+                shape = RoundedCornerShape(20.dp)
             ) {
-                Text("Guardar")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = alCancelar) {
-                Text("Cancelar", color = ColorSecundario)
+                Text("Guardar", color = TextoBlancoGlass, fontWeight = FontWeight.Bold)
             }
         }
-    )
+    }
 }
-
 @Composable
 fun VistaHistorialMovimientos(viewModel: DashboardViewModel) {
     val listaMovimientos by viewModel.listaMovimientos.collectAsState()
@@ -1009,8 +1196,9 @@ fun VistaHistorialMovimientos(viewModel: DashboardViewModel) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { mostrarDialogoNuevoMovimiento = true },
-                containerColor = ColorCanela,
-                contentColor = Color.White
+                containerColor = Color(0x3378FFD6),
+                contentColor = TextoVerdeNeon,
+                modifier = Modifier.border(1.dp, TextoVerdeNeon, CircleShape)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Nuevo Movimiento")
             }
@@ -1027,10 +1215,10 @@ fun VistaHistorialMovimientos(viewModel: DashboardViewModel) {
                 text = "Resumen del Negocio",
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                color = ColorChocolate
+                color = TextoBlancoGlass
             )
 
-            // TARJETA DE RESUMEN CON GRÁFICO BARRAS DE PROPORCIÓN
+            // TARJETA DE RESUMEN CON GRÁFICO BARRAS DE PROPORCIÓN GLASSCORP
             TarjetaPasteleria {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(
@@ -1038,39 +1226,40 @@ fun VistaHistorialMovimientos(viewModel: DashboardViewModel) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Ingresos", fontSize = 12.sp, color = Color.Gray)
-                            Text("+$totalIngresos CLP", color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
+                            Text("Ingresos", fontSize = 12.sp, color = TextoSecundarioGlass)
+                            Text("+$totalIngresos CLP", color = TextoVerdeNeon, fontWeight = FontWeight.Bold)
                         }
                         Column {
-                            Text("Egresos", fontSize = 12.sp, color = Color.Gray)
-                            Text("-$totalEgresos CLP", color = Color(0xFFC62828), fontWeight = FontWeight.Bold)
+                            Text("Egresos", fontSize = 12.sp, color = TextoSecundarioGlass)
+                            Text("-$totalEgresos CLP", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold)
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("Balance Total", fontSize = 12.sp, color = Color.Gray)
+                            Text("Balance Total", fontSize = 12.sp, color = TextoSecundarioGlass)
                             Text(
                                 text = "$balanceNeto CLP",
-                                color = if (balanceNeto >= 0) Color(0xFF388E3C) else Color(0xFFC62828),
+                                color = if (balanceNeto >= 0) TextoVerdeNeon else Color(0xFFFF5252),
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     }
 
-                    // --- GRÁFICO VISUAL DE BARRAS DE PROPORCIÓN ---
+                    // --- GRÁFICO VISUAL DE BARRAS DE PROPORCIÓN GLASSCORP ---
                     if (listaMovimientos.isNotEmpty()) {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
                                 text = "Distribución de Flujo de Caja",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = ColorSecundario
+                                color = TextoVerdeNeon
                             )
 
-                            // Barra de progreso dividida (Verde = Ingresos, Rojo = Egresos)
+                            // Barra de progreso dividida (Verde Neón = Ingresos, Rojo Neón = Egresos)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(14.dp)
-                                    .background(Color(0xFFE0E0E0), shape = RoundedCornerShape(7.dp))
+                                    .background(Color(0x1AFFFFFF), shape = RoundedCornerShape(7.dp))
+                                    .border(0.5.dp, Color(0x33FFFFFF), RoundedCornerShape(7.dp))
                             ) {
                                 if (pctIngresos > 0f) {
                                     Box(
@@ -1078,7 +1267,7 @@ fun VistaHistorialMovimientos(viewModel: DashboardViewModel) {
                                             .fillMaxHeight()
                                             .weight(pctIngresos)
                                             .background(
-                                                Color(0xFF4CAF50),
+                                                TextoVerdeNeon,
                                                 shape = if (pctEgresos == 0f) RoundedCornerShape(7.dp) else RoundedCornerShape(topStart = 7.dp, bottomStart = 7.dp)
                                             )
                                     )
@@ -1089,7 +1278,7 @@ fun VistaHistorialMovimientos(viewModel: DashboardViewModel) {
                                             .fillMaxHeight()
                                             .weight(pctEgresos)
                                             .background(
-                                                Color(0xFFE57373),
+                                                Color(0xFFFF5252),
                                                 shape = if (pctIngresos == 0f) RoundedCornerShape(7.dp) else RoundedCornerShape(topEnd = 7.dp, bottomEnd = 7.dp)
                                             )
                                     )
@@ -1104,13 +1293,13 @@ fun VistaHistorialMovimientos(viewModel: DashboardViewModel) {
                                 Text(
                                     text = "Ingresos (${(pctIngresos * 100).toInt()}%)",
                                     fontSize = 10.sp,
-                                    color = Color(0xFF2E7D32),
+                                    color = TextoVerdeNeon,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = "Egresos (${(pctEgresos * 100).toInt()}%)",
                                     fontSize = 10.sp,
-                                    color = Color(0xFFC62828),
+                                    color = Color(0xFFFF5252),
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -1123,7 +1312,7 @@ fun VistaHistorialMovimientos(viewModel: DashboardViewModel) {
                 text = "Historial de Transacciones",
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = ColorChocolate
+                color = TextoBlancoGlass
             )
 
             // LISTA DE MOVIMIENTOS CON EDICIÓN Y ELIMINACIÓN
@@ -1134,7 +1323,7 @@ fun VistaHistorialMovimientos(viewModel: DashboardViewModel) {
                         .padding(32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No hay movimientos registrados. Toca '+' para agregar uno.", color = Color.Gray)
+                    Text("No hay movimientos registrados. Toca '+' para agregar uno.", color = TextoSecundarioGlass)
                 }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1152,12 +1341,12 @@ fun VistaHistorialMovimientos(viewModel: DashboardViewModel) {
                                     Text(
                                         text = mov.descripcion,
                                         fontWeight = FontWeight.Bold,
-                                        color = ColorChocolate
+                                        color = TextoBlancoGlass
                                     )
                                     Text(
                                         text = mov.fechaHora,
                                         fontSize = 11.sp,
-                                        color = Color.Gray
+                                        color = TextoSecundarioGlass
                                     )
                                 }
 
@@ -1167,14 +1356,14 @@ fun VistaHistorialMovimientos(viewModel: DashboardViewModel) {
                                 ) {
                                     Text(
                                         text = "${if (mov.esIngreso) "+" else "-"}${mov.montoCLP} CLP",
-                                        color = if (mov.esIngreso) Color(0xFF2E7D32) else Color(0xFFC62828),
+                                        color = if (mov.esIngreso) TextoVerdeNeon else Color(0xFFFF5252),
                                         fontWeight = FontWeight.Bold
                                     )
                                     IconButton(onClick = { movimientoAEditar = mov }) {
                                         Icon(
                                             imageVector = Icons.Default.Edit,
                                             contentDescription = "Editar Movimiento",
-                                            tint = ColorCanela,
+                                            tint = TextoVerdeNeon,
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -1182,7 +1371,7 @@ fun VistaHistorialMovimientos(viewModel: DashboardViewModel) {
                                         Icon(
                                             imageVector = Icons.Default.Delete,
                                             contentDescription = "Eliminar Movimiento",
-                                            tint = Color(0xFFD32F2F),
+                                            tint = Color(0xFFFF5252),
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }
@@ -1227,7 +1416,6 @@ fun VistaHistorialMovimientos(viewModel: DashboardViewModel) {
         )
     }
 }
-
 // ==========================================
 // DIÁLOGO REUTILIZABLE: MOVIMIENTO CON VALIDACIONES
 // ==========================================
@@ -1244,92 +1432,140 @@ fun DialogoNuevoMovimiento(
     var montoText by remember { mutableStateOf(montoInicial) }
     var esIngreso by remember { mutableStateOf(esIngresoInicial) }
 
-    // Control para mostrar errores solo tras presionar Guardar
     var intentadoGuardar by remember { mutableStateOf(false) }
 
-    // Criterios de validación
     val esDescripcionInvalida = intentadoGuardar && descripcion.isBlank()
     val montoInt = montoText.toIntOrNull()
     val esMontoInvalido = intentadoGuardar && (montoInt == null || montoInt <= 0)
 
-    AlertDialog(
-        onDismissRequest = alCancelar,
-        title = { Text(text = titulo, fontWeight = FontWeight.Bold, color = ColorChocolate) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                // SELECTOR TIPO: INGRESO O EGRESO
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    FilterChip(
+    val coloresInputGlass = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = TextoBlancoGlass,
+        unfocusedTextColor = TextoBlancoGlass,
+        focusedContainerColor = Color(0x1AFFFFFF),
+        unfocusedContainerColor = Color(0x0DFFFFFF),
+        focusedBorderColor = TextoVerdeNeon,
+        unfocusedBorderColor = Color(0x40FFFFFF),
+        focusedLabelColor = TextoVerdeNeon,
+        unfocusedLabelColor = TextoSecundarioGlass,
+        errorBorderColor = Color(0xFFFF5252),
+        errorLabelColor = Color(0xFFFF5252)
+    )
+
+    DialogoGlassContainer(onDismissRequest = alCancelar) {
+        // TÍTULO DEL DIÁLOGO
+        Text(
+            text = titulo,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            color = TextoBlancoGlass,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            // SELECTOR TIPO: INGRESO O EGRESO GLASSCORP CORREGIDO
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = !esIngreso,
+                    onClick = { esIngreso = false },
+                    label = { Text("Egreso / Gasto") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = Color(0x1AFFFFFF),
+                        labelColor = TextoSecundarioGlass,
+                        selectedContainerColor = Color(0x4DFF5252),
+                        selectedLabelColor = Color(0xFFFF8A80)
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
                         selected = !esIngreso,
-                        onClick = { esIngreso = false },
-                        label = { Text("Egreso / Gasto") },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Color(0xFFE57373),
-                            selectedLabelColor = Color.White
-                        ),
-                        modifier = Modifier.weight(1f)
-                    )
-                    FilterChip(
+                        borderColor = Color(0x33FFFFFF),
+                        selectedBorderColor = Color(0xFFFF5252)
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
+
+                FilterChip(
+                    selected = esIngreso,
+                    onClick = { esIngreso = true },
+                    label = { Text("Ingreso Extra") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = Color(0x1AFFFFFF),
+                        labelColor = TextoSecundarioGlass,
+                        selectedContainerColor = Color(0x3378FFD6),
+                        selectedLabelColor = TextoVerdeNeon
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
                         selected = esIngreso,
-                        onClick = { esIngreso = true },
-                        label = { Text("Ingreso Extra") },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Color(0xFF81C784),
-                            selectedLabelColor = Color.White
-                        ),
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+                        borderColor = Color(0x33FFFFFF),
+                        selectedBorderColor = TextoVerdeNeon
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-                // 1. CAMPO DESCRIPCIÓN
-                Column {
-                    OutlinedTextField(
-                        value = descripcion,
-                        onValueChange = { descripcion = it },
-                        label = { Text("Descripción (ej. Arriendo, Venta evento)") },
-                        singleLine = true,
-                        isError = esDescripcionInvalida,
-                        modifier = Modifier.fillMaxWidth()
+            // 1. CAMPO DESCRIPCIÓN
+            Column {
+                OutlinedTextField(
+                    value = descripcion,
+                    onValueChange = { descripcion = it },
+                    label = { Text("Descripción (ej. Arriendo, Venta evento)") },
+                    singleLine = true,
+                    isError = esDescripcionInvalida,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = coloresInputGlass
+                )
+                if (esDescripcionInvalida) {
+                    Text(
+                        text = "⚠️ La descripción no puede estar vacía",
+                        color = Color(0xFFFF5252),
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
                     )
-                    if (esDescripcionInvalida) {
-                        Text(
-                            text = "⚠️ La descripción no puede estar vacía",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                        )
-                    }
-                }
-
-                // 2. CAMPO MONTO CLP
-                Column {
-                    OutlinedTextField(
-                        value = montoText,
-                        onValueChange = { texto ->
-                            // Filtrar solo valores numéricos
-                            montoText = texto.filter { char -> char.isDigit() }
-                        },
-                        label = { Text("Monto (CLP)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        isError = esMontoInvalido,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (esMontoInvalido) {
-                        Text(
-                            text = " Ingrese un monto válido mayor a 0 CLP",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                        )
-                    }
                 }
             }
-        },
-        confirmButton = {
+
+            // 2. CAMPO MONTO CLP
+            Column {
+                OutlinedTextField(
+                    value = montoText,
+                    onValueChange = { texto ->
+                        montoText = texto.filter { char -> char.isDigit() }
+                    },
+                    label = { Text("Monto (CLP)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    isError = esMontoInvalido,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = coloresInputGlass
+                )
+                if (esMontoInvalido) {
+                    Text(
+                        text = "⚠️ Ingrese un monto válido mayor a 0 CLP",
+                        color = Color(0xFFFF5252),
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // BOTONES DE ACCIÓN (CANCELAR Y GUARDAR)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = alCancelar) {
+                Text("Cancelar", color = TextoSecundarioGlass)
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
             Button(
                 onClick = {
                     intentadoGuardar = true
@@ -1337,18 +1573,16 @@ fun DialogoNuevoMovimiento(
                         alGuardar(descripcion.trim(), montoInt, esIngreso)
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = ColorCanela)
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0x3378FFD6)),
+                border = BorderStroke(1.dp, TextoVerdeNeon),
+                shape = RoundedCornerShape(20.dp)
             ) {
-                Text("Guardar")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = alCancelar) {
-                Text("Cancelar", color = ColorSecundario)
+                Text("Guardar", color = TextoBlancoGlass, fontWeight = FontWeight.Bold)
             }
         }
-    )
-}@Composable
+    }
+}
+@Composable
 fun VistaRecetaChurros(viewModel: DashboardViewModel) {
     val listaReceta by viewModel.listaReceta.collectAsState()
     val listaInsumos by viewModel.listaInsumos.collectAsState()
@@ -1362,8 +1596,9 @@ fun VistaRecetaChurros(viewModel: DashboardViewModel) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { mostrarDialogoCrear = true },
-                containerColor = ColorCanela,
-                contentColor = Color.White
+                containerColor = Color(0x3378FFD6),
+                contentColor = TextoVerdeNeon,
+                modifier = Modifier.border(1.dp, TextoVerdeNeon, CircleShape)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Agregar a la Receta")
             }
@@ -1380,16 +1615,16 @@ fun VistaRecetaChurros(viewModel: DashboardViewModel) {
                 text = "Configuración de Receta Base",
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                color = ColorChocolate
+                color = TextoBlancoGlass
             )
 
-            // CALCULADORA DE TANDAS
+            // CALCULADORA DE TANDAS GLASSCORP
             TarjetaPasteleria {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         text = "Calculadora para ${tandasAPreparar * 40} churros",
                         fontWeight = FontWeight.Bold,
-                        color = ColorChocolate
+                        color = TextoBlancoGlass
                     )
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1398,26 +1633,28 @@ fun VistaRecetaChurros(viewModel: DashboardViewModel) {
                             enabled = tandasAPreparar > 1,
                             modifier = Modifier.size(36.dp),
                             contentPadding = PaddingValues(0.dp),
-                            shape = CircleShape
+                            shape = CircleShape,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x66FFFFFF))
                         ) {
-                            Text("-", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            Text("-", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextoBlancoGlass)
                         }
 
                         Text(
                             text = "$tandasAPreparar",
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 12.dp),
-                            color = ColorChocolate,
-                            fontSize = 16.sp
+                            modifier = Modifier.padding(horizontal = 14.dp),
+                            color = TextoVerdeNeon,
+                            fontSize = 18.sp
                         )
 
                         OutlinedButton(
                             onClick = { tandasAPreparar++ },
                             modifier = Modifier.size(36.dp),
                             contentPadding = PaddingValues(0.dp),
-                            shape = CircleShape
+                            shape = CircleShape,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, TextoVerdeNeon)
                         ) {
-                            Text("+", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            Text("+", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextoVerdeNeon)
                         }
                     }
                 }
@@ -1427,10 +1664,10 @@ fun VistaRecetaChurros(viewModel: DashboardViewModel) {
                 text = "Ingredientes de tu Receta Base",
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = ColorChocolate
+                color = TextoBlancoGlass
             )
 
-            // LISTA DE INGREDIENTES CON ACCIONES CRUD
+            // LISTA DE INGREDIENTES CON ACCIONES CRUD GLASSCORP
             if (listaReceta.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -1440,7 +1677,7 @@ fun VistaRecetaChurros(viewModel: DashboardViewModel) {
                 ) {
                     Text(
                         text = "No has registrado ingredientes. Haz clic en '+' para agregar uno.",
-                        color = Color.Gray
+                        color = TextoSecundarioGlass
                     )
                 }
             } else {
@@ -1449,14 +1686,12 @@ fun VistaRecetaChurros(viewModel: DashboardViewModel) {
                         items = listaReceta,
                         key = { item: RecetaItem -> item.id }
                     ) { item: RecetaItem ->
-                        // Cálculo correcto de cantidad requerida según tandas
                         val cantidadRequerida = item.cantidadParaTanda * tandasAPreparar
 
                         val insumoEnBodega = listaInsumos.find {
                             it.nombre.contains(item.nombreIngrediente, ignoreCase = true)
                         }
 
-                        // Verificación inteligente comparando en unidad base (g / ml)
                         val stockSuficiente = if (insumoEnBodega != null) {
                             val requeridoBase = viewModel.convertirACantidadBase(cantidadRequerida, item.unidadMedida)
                             val stockBodegaBase = viewModel.convertirACantidadBase(insumoEnBodega.cantidadDisponible, insumoEnBodega.unidadMedida)
@@ -1475,25 +1710,25 @@ fun VistaRecetaChurros(viewModel: DashboardViewModel) {
                                     Text(
                                         text = item.nombreIngrediente,
                                         fontWeight = FontWeight.Bold,
-                                        color = ColorChocolate
+                                        color = TextoBlancoGlass
                                     )
                                     Text(
                                         text = "Requerido: $cantidadRequerida ${item.unidadMedida} ($tandasAPreparar tanda${if (tandasAPreparar > 1) "s" else ""})",
                                         fontSize = 12.sp,
-                                        color = Color.Gray
+                                        color = TextoSecundarioGlass
                                     )
                                     if (insumoEnBodega != null) {
                                         Text(
                                             text = if (stockSuficiente) "Stock disponible OK " else "Atención: Falta stock en bodega ",
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.SemiBold,
-                                            color = if (stockSuficiente) Color(0xFF2E7D32) else Color(0xFFC62828)
+                                            color = if (stockSuficiente) TextoVerdeNeon else Color(0xFFFF5252)
                                         )
                                     } else {
                                         Text(
                                             text = "No registrado en bodega ",
                                             fontSize = 11.sp,
-                                            color = Color.Gray
+                                            color = TextoSecundarioGlass
                                         )
                                     }
                                 }
@@ -1503,14 +1738,14 @@ fun VistaRecetaChurros(viewModel: DashboardViewModel) {
                                         Icon(
                                             imageVector = Icons.Default.Edit,
                                             contentDescription = "Editar",
-                                            tint = ColorCanela
+                                            tint = TextoVerdeNeon
                                         )
                                     }
                                     IconButton(onClick = { viewModel.eliminarIngredienteReceta(item) }) {
                                         Icon(
                                             imageVector = Icons.Default.Delete,
                                             contentDescription = "Eliminar",
-                                            tint = Color(0xFFD32F2F)
+                                            tint = Color(0xFFFF5252)
                                         )
                                     }
                                 }
@@ -1555,7 +1790,6 @@ fun VistaRecetaChurros(viewModel: DashboardViewModel) {
         )
     }
 }
-
 // ==========================================
 // DIÁLOGO REUTILIZABLE: INGREDIENTE CON VALIDACIONES
 // ==========================================
@@ -1572,89 +1806,121 @@ fun DialogoIngredienteReceta(
     var cantidadText by remember { mutableStateOf(cantidadInicial) }
     var unidad by remember { mutableStateOf(unidadInicial) }
 
-    // Control para mostrar errores solo tras intentar guardar
     var intentadoGuardar by remember { mutableStateOf(false) }
 
-    // Reglas de validación
     val esNombreInvalido = intentadoGuardar && nombre.isBlank()
     val cantidadDouble = cantidadText.toDoubleOrNull()
     val esCantidadInvalida = intentadoGuardar && (cantidadDouble == null || cantidadDouble <= 0.0)
     val esUnidadInvalida = intentadoGuardar && unidad.isBlank()
 
-    AlertDialog(
-        onDismissRequest = alCancelar,
-        title = {
-            Text(text = titulo, fontWeight = FontWeight.Bold, color = ColorChocolate)
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                // 1. CAMPO NOMBRE DEL INGREDIENTE
-                Column {
-                    OutlinedTextField(
-                        value = nombre,
-                        onValueChange = { nombre = it },
-                        label = { Text("Ingrediente (ej. Harina, Agua, Sal)") },
-                        singleLine = true,
-                        isError = esNombreInvalido,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (esNombreInvalido) {
-                        Text(
-                            text = " Ingrese el nombre del ingrediente",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                        )
-                    }
-                }
+    val coloresInputGlass = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = TextoBlancoGlass,
+        unfocusedTextColor = TextoBlancoGlass,
+        focusedContainerColor = Color(0x1AFFFFFF),
+        unfocusedContainerColor = Color(0x0DFFFFFF),
+        focusedBorderColor = TextoVerdeNeon,
+        unfocusedBorderColor = Color(0x40FFFFFF),
+        focusedLabelColor = TextoVerdeNeon,
+        unfocusedLabelColor = TextoSecundarioGlass,
+        errorBorderColor = Color(0xFFFF5252),
+        errorLabelColor = Color(0xFFFF5252)
+    )
 
-                // 2. CAMPO CANTIDAD PARA 1 TANDA
-                Column {
-                    OutlinedTextField(
-                        value = cantidadText,
-                        onValueChange = { texto ->
-                            if (texto.isEmpty() || texto.matches(Regex("^\\d*([.,]?\\d*)?$"))) {
-                                cantidadText = texto.replace(',', '.')
-                            }
-                        },
-                        label = { Text("Cantidad por Tanda (40 churros)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        isError = esCantidadInvalida,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (esCantidadInvalida) {
-                        Text(
-                            text = "⚠️ Ingrese una cantidad válida mayor a 0",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                        )
-                    }
-                }
+    DialogoGlassContainer(onDismissRequest = alCancelar) {
+        // TÍTULO DEL DIÁLOGO
+        Text(
+            text = titulo,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            color = TextoBlancoGlass,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
 
-                // 3. CAMPO UNIDAD DE MEDIDA
-                Column {
-                    OutlinedTextField(
-                        value = unidad,
-                        onValueChange = { unidad = it },
-                        label = { Text("Unidad (ej. g, ml, kg, cda)") },
-                        singleLine = true,
-                        isError = esUnidadInvalida,
-                        modifier = Modifier.fillMaxWidth()
+        // CAMPOS DE TEXTO
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            // 1. CAMPO NOMBRE
+            Column {
+                OutlinedTextField(
+                    value = nombre,
+                    onValueChange = { nombre = it },
+                    label = { Text("Ingrediente (ej. Harina, Agua, Sal)") },
+                    singleLine = true,
+                    isError = esNombreInvalido,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = coloresInputGlass
+                )
+                if (esNombreInvalido) {
+                    Text(
+                        text = "⚠️ Ingrese el nombre del ingrediente",
+                        color = Color(0xFFFF5252),
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
                     )
-                    if (esUnidadInvalida) {
-                        Text(
-                            text = " Ingrese la unidad de medida",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                        )
-                    }
                 }
             }
-        },
-        confirmButton = {
+
+            // 2. CAMPO CANTIDAD
+            Column {
+                OutlinedTextField(
+                    value = cantidadText,
+                    onValueChange = { texto ->
+                        if (texto.isEmpty() || texto.matches(Regex("^\\d*([.,]?\\d*)?$"))) {
+                            cantidadText = texto.replace(',', '.')
+                        }
+                    },
+                    label = { Text("Cantidad por Tanda (40 churros)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    isError = esCantidadInvalida,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = coloresInputGlass
+                )
+                if (esCantidadInvalida) {
+                    Text(
+                        text = "⚠️ Ingrese una cantidad válida mayor a 0",
+                        color = Color(0xFFFF5252),
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
+            }
+
+            // 3. CAMPO UNIDAD
+            Column {
+                OutlinedTextField(
+                    value = unidad,
+                    onValueChange = { unidad = it },
+                    label = { Text("Unidad (ej. g, ml, kg, cda)") },
+                    singleLine = true,
+                    isError = esUnidadInvalida,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = coloresInputGlass
+                )
+                if (esUnidadInvalida) {
+                    Text(
+                        text = "⚠️ Ingrese la unidad de medida",
+                        color = Color(0xFFFF5252),
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // BOTONES DE ACCIÓN (CANCELAR Y GUARDAR)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = alCancelar) {
+                Text("Cancelar", color = TextoSecundarioGlass)
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
             Button(
                 onClick = {
                     intentadoGuardar = true
@@ -1662,16 +1928,12 @@ fun DialogoIngredienteReceta(
                         alGuardar(nombre.trim(), cantidadDouble, unidad.trim())
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = ColorCanela)
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0x3378FFD6)),
+                border = BorderStroke(1.dp, TextoVerdeNeon),
+                shape = RoundedCornerShape(20.dp)
             ) {
-                Text("Guardar")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = alCancelar) {
-                Text("Cancelar", color = ColorSecundario)
+                Text("Guardar", color = TextoBlancoGlass, fontWeight = FontWeight.Bold)
             }
         }
-    )
-
+    }
 }
